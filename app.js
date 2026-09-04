@@ -60,6 +60,8 @@ function startEditingItem(item) {
   inventoryFormHeading.textContent = "Edit inventory item";
   submitButton.textContent = "Save changes";
   cancelButton.hidden = false;
+  nameInput.setCustomValidity("");
+  descriptionInput.setCustomValidity("");
   nameInput.focus();
 }
 
@@ -143,6 +145,8 @@ function startEditingEmployee(employee) {
   employeeFormHeading.textContent = "Edit employee";
   employeeSubmitButton.textContent = "Save changes";
   employeeCancelButton.hidden = false;
+  employeeNameInput.setCustomValidity("");
+  employeeEmailInput.setCustomValidity("");
   employeeNameInput.focus();
 }
 
