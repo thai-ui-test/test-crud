@@ -68,6 +68,8 @@ function startEditingItem(item) {
 function deleteItem(id) {
   const index = inventory.findIndex((item) => item.id === id);
   if (index < 0) return;
+  const item = inventory[index];
+  if (!window.confirm(`Delete ${item.name}? This cannot be undone.`)) return;
   const [removed] = inventory.splice(index, 1);
   if (recordIdInput.value === String(id)) resetInventoryForm();
   const focusId = inventory[Math.min(index, inventory.length - 1)]?.id;
@@ -153,8 +155,11 @@ function startEditingEmployee(employee) {
 function deleteEmployee(id) {
   const index = employees.findIndex((employee) => employee.id === id);
   if (index < 0) return;
-  const [removed] = employees.splice(index, 1);
+  const employee = employees[index];
   const returnedCount = inventory.filter((item) => item.employeeId === id).length;
+  const assignmentNote = returnedCount ? ` and return ${returnedCount} assigned item${returnedCount === 1 ? "" : "s"} to unassigned` : "";
+  if (!window.confirm(`Delete ${employee.name}${assignmentNote}? This cannot be undone.`)) return;
+  const [removed] = employees.splice(index, 1);
   inventory.forEach((item) => { if (item.employeeId === id) item.employeeId = null; });
   if (employeeIdInput.value === String(id)) resetEmployeeForm();
   const focusId = employees[Math.min(index, employees.length - 1)]?.id;
