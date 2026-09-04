@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Manager</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main>
+      <h1>Inventory Manager</h1>
+
+      <form id="inventory-form">
+        <input type="hidden" id="record-id">
+
+        <label for="name">Name</label>
+        <input type="text" id="name" name="name" required>
+
+        <label for="description">Description</label>
+        <textarea id="description" name="description" rows="3" required></textarea>
+
+        <label for="status">Status</label>
+        <select id="status" name="status" required>
+          <option value="In stock">In stock</option>
+          <option value="Low stock">Low stock</option>
+          <option value="Out of stock">Out of stock</option>
+        </select>
+
+        <div class="form-actions">
+          <button type="submit" id="submit-button">Add item</button>
+          <button type="button" id="cancel-button" hidden>Cancel edit</button>
+        </div>
+      </form>
+
+      <section aria-labelledby="inventory-heading">
+        <h2 id="inventory-heading">Current inventory</h2>
+        <p id="empty-message">No inventory records yet.</p>
+        <ul id="inventory-list" aria-live="polite"></ul>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

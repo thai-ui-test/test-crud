@@ -1,0 +1,98 @@
+:root {
+  color-scheme: light;
+  font-family: system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  padding: 2rem 1rem;
+  color: #111;
+  background: #eaff00;
+}
+
+main {
+  width: min(42rem, 100%);
+  margin: 0 auto;
+}
+
+form,
+.inventory-item {
+  padding: 1.25rem;
+  border: 2px solid #111;
+  border-radius: 0.5rem;
+  background: #fff;
+  box-shadow: 4px 4px 0 #111;
+}
+
+form {
+  display: grid;
+  gap: 0.5rem;
+}
+
+input,
+textarea,
+select,
+button {
+  font: inherit;
+}
+
+input,
+textarea,
+select {
+  width: 100%;
+  padding: 0.65rem;
+  border: 2px solid #111;
+  border-radius: 0.25rem;
+}
+
+textarea {
+  resize: vertical;
+}
+
+.form-actions,
+.item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+button {
+  padding: 0.6rem 1rem;
+  border: 2px solid #111;
+  border-radius: 0.25rem;
+  color: #fff;
+  background: #111;
+  cursor: pointer;
+}
+
+button:hover,
+button:focus-visible {
+  color: #111;
+  background: #eaff00;
+}
+
+h2 {
+  margin-top: 2rem;
+}
+
+#inventory-list {
+  display: grid;
+  gap: 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.inventory-item h3,
+.inventory-item p {
+  margin-top: 0;
+}
+
+.inventory-item p:last-of-type {
+  margin-bottom: 0;
+}
