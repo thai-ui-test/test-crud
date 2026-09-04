@@ -1,5 +1,6 @@
 const $ = (selector) => document.querySelector(selector);
 const inventoryForm = $("#inventory-form");
+const inventoryFormHeading = $("#inventory-form-heading");
 const recordIdInput = $("#record-id");
 const nameInput = $("#name");
 const descriptionInput = $("#description");
@@ -9,6 +10,7 @@ const cancelButton = $("#cancel-button");
 const inventoryList = $("#inventory-list");
 const emptyMessage = $("#empty-message");
 const employeeForm = $("#employee-form");
+const employeeFormHeading = $("#employee-form-heading");
 const employeeIdInput = $("#employee-id");
 const employeeNameInput = $("#employee-name");
 const employeeEmailInput = $("#employee-email");
@@ -43,6 +45,7 @@ function requireTrimmed(input, message) {
 function resetInventoryForm() {
   inventoryForm.reset();
   recordIdInput.value = "";
+  inventoryFormHeading.textContent = "Add an inventory item";
   submitButton.textContent = "Add item";
   cancelButton.hidden = true;
   nameInput.setCustomValidity("");
@@ -54,6 +57,7 @@ function startEditingItem(item) {
   nameInput.value = item.name;
   descriptionInput.value = item.description;
   statusInput.value = item.status;
+  inventoryFormHeading.textContent = "Edit inventory item";
   submitButton.textContent = "Save changes";
   cancelButton.hidden = false;
   nameInput.focus();
@@ -98,7 +102,7 @@ function renderInventory() {
     select.id = `assignment-${item.id}`;
     select.dataset.assignment = item.id;
     select.append(new Option("Unassigned", ""));
-    employees.forEach((record) => select.append(new Option(record.name, record.id)));
+    employees.forEach((record) => select.append(new Option(`${record.name} (${record.email})`, record.id)));
     select.value = item.employeeId || "";
     select.addEventListener("change", () => setAssignment(item.id, Number(select.value)));
     assignment.append(label, select);
@@ -125,6 +129,7 @@ function renderInventory() {
 function resetEmployeeForm() {
   employeeForm.reset();
   employeeIdInput.value = "";
+  employeeFormHeading.textContent = "Add an employee";
   employeeSubmitButton.textContent = "Add employee";
   employeeCancelButton.hidden = true;
   employeeNameInput.setCustomValidity("");
@@ -135,6 +140,7 @@ function startEditingEmployee(employee) {
   employeeIdInput.value = employee.id;
   employeeNameInput.value = employee.name;
   employeeEmailInput.value = employee.email;
+  employeeFormHeading.textContent = "Edit employee";
   employeeSubmitButton.textContent = "Save changes";
   employeeCancelButton.hidden = false;
   employeeNameInput.focus();
