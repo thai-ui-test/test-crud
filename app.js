@@ -54,9 +54,8 @@ function resetInventoryForm() {
 }
 
 function startEditingItem(item) {
-  const isSameItem = recordIdInput.value === String(item.id);
   const hasDraft = inventoryForm.dataset.dirty === "true";
-  if (!isSameItem && hasDraft && !window.confirm("Discard the current inventory draft?")) return;
+  if (hasDraft && !window.confirm("Discard the current inventory draft?")) return;
   recordIdInput.value = item.id;
   nameInput.value = item.name;
   descriptionInput.value = item.description;
@@ -147,9 +146,8 @@ function resetEmployeeForm() {
 }
 
 function startEditingEmployee(employee) {
-  const isSameEmployee = employeeIdInput.value === String(employee.id);
   const hasDraft = employeeForm.dataset.dirty === "true";
-  if (!isSameEmployee && hasDraft && !window.confirm("Discard the current employee draft?")) return;
+  if (hasDraft && !window.confirm("Discard the current employee draft?")) return;
   employeeIdInput.value = employee.id;
   employeeNameInput.value = employee.name;
   employeeEmailInput.value = employee.email;
@@ -249,6 +247,7 @@ employeeCancelButton.addEventListener("click", () => {
   announce("Employee edit cancelled.");
 });
 [nameInput, descriptionInput].forEach((input) => input.addEventListener("input", () => { input.setCustomValidity(""); inventoryForm.dataset.dirty = "true"; }));
+statusInput.addEventListener("change", () => { inventoryForm.dataset.dirty = "true"; });
 [employeeNameInput, employeeEmailInput].forEach((input) => input.addEventListener("input", () => { input.setCustomValidity(""); employeeForm.dataset.dirty = "true"; }));
 
 renderInventory();
