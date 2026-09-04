@@ -50,9 +50,13 @@ function resetInventoryForm() {
   cancelButton.hidden = true;
   nameInput.setCustomValidity("");
   descriptionInput.setCustomValidity("");
+  inventoryForm.dataset.dirty = "false";
 }
 
 function startEditingItem(item) {
+  const isSameItem = recordIdInput.value === String(item.id);
+  const hasDraft = inventoryForm.dataset.dirty === "true";
+  if (!isSameItem && hasDraft && !window.confirm("Discard the current inventory draft?")) return;
   recordIdInput.value = item.id;
   nameInput.value = item.name;
   descriptionInput.value = item.description;
@@ -63,6 +67,7 @@ function startEditingItem(item) {
   nameInput.setCustomValidity("");
   descriptionInput.setCustomValidity("");
   nameInput.focus();
+  inventoryForm.dataset.dirty = "false";
 }
 
 function deleteItem(id) {
@@ -138,9 +143,13 @@ function resetEmployeeForm() {
   employeeCancelButton.hidden = true;
   employeeNameInput.setCustomValidity("");
   employeeEmailInput.setCustomValidity("");
+  employeeForm.dataset.dirty = "false";
 }
 
 function startEditingEmployee(employee) {
+  const isSameEmployee = employeeIdInput.value === String(employee.id);
+  const hasDraft = employeeForm.dataset.dirty === "true";
+  if (!isSameEmployee && hasDraft && !window.confirm("Discard the current employee draft?")) return;
   employeeIdInput.value = employee.id;
   employeeNameInput.value = employee.name;
   employeeEmailInput.value = employee.email;
@@ -150,6 +159,7 @@ function startEditingEmployee(employee) {
   employeeNameInput.setCustomValidity("");
   employeeEmailInput.setCustomValidity("");
   employeeNameInput.focus();
+  employeeForm.dataset.dirty = "false";
 }
 
 function deleteEmployee(id) {
@@ -238,7 +248,8 @@ employeeCancelButton.addEventListener("click", () => {
   $(`[data-employee-edit="${id}"]`)?.focus();
   announce("Employee edit cancelled.");
 });
-[nameInput, descriptionInput, employeeNameInput, employeeEmailInput].forEach((input) => input.addEventListener("input", () => input.setCustomValidity("")));
+[nameInput, descriptionInput].forEach((input) => input.addEventListener("input", () => { input.setCustomValidity(""); inventoryForm.dataset.dirty = "true"; }));
+[employeeNameInput, employeeEmailInput].forEach((input) => input.addEventListener("input", () => { input.setCustomValidity(""); employeeForm.dataset.dirty = "true"; }));
 
 renderInventory();
 renderEmployees();
