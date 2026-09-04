@@ -1,44 +1,57 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventory Manager</title>
-    <link rel="stylesheet" href="styles.css">
-  </head>
-  <body>
-    <main>
-      <h1>Inventory Manager</h1>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventory Manager</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main>
+  <h1>Inventory Manager</h1>
+  <p id="app-status" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true"></p>
 
-      <form id="inventory-form">
-        <input type="hidden" id="record-id">
+  <section aria-labelledby="inventory-form-heading">
+    <h2 id="inventory-form-heading">Add an inventory item</h2>
+    <form id="inventory-form" novalidate>
+      <input type="hidden" id="record-id">
+      <label for="name">Name</label><input type="text" id="name" name="name" required>
+      <label for="description">Description</label><textarea id="description" name="description" rows="3" required></textarea>
+      <label for="status">Status</label>
+      <select id="status" name="status" required>
+        <option value="In stock">In stock</option><option value="Low stock">Low stock</option><option value="Out of stock">Out of stock</option>
+      </select>
+      <div class="form-actions"><button type="submit" id="submit-button">Add item</button><button type="button" id="cancel-button" hidden>Cancel edit</button></div>
+    </form>
+  </section>
 
-        <label for="name">Name</label>
-        <input type="text" id="name" name="name" required>
+  <section aria-labelledby="inventory-heading">
+    <h2 id="inventory-heading">Current inventory</h2>
+    <p id="empty-message">No inventory records yet.</p>
+    <ul id="inventory-list"></ul>
+  </section>
 
-        <label for="description">Description</label>
-        <textarea id="description" name="description" rows="3" required></textarea>
+  <section aria-labelledby="employee-form-heading">
+    <h2 id="employee-form-heading">Add an employee</h2>
+    <form id="employee-form" novalidate>
+      <input type="hidden" id="employee-id">
+      <label for="employee-name">Name</label><input type="text" id="employee-name" name="employee-name" required>
+      <label for="employee-email">Email</label><input type="email" id="employee-email" name="employee-email" required>
+      <div class="form-actions"><button type="submit" id="employee-submit-button">Add employee</button><button type="button" id="employee-cancel-button" hidden>Cancel edit</button></div>
+    </form>
+  </section>
 
-        <label for="status">Status</label>
-        <select id="status" name="status" required>
-          <option value="In stock">In stock</option>
-          <option value="Low stock">Low stock</option>
-          <option value="Out of stock">Out of stock</option>
-        </select>
-
-        <div class="form-actions">
-          <button type="submit" id="submit-button">Add item</button>
-          <button type="button" id="cancel-button" hidden>Cancel edit</button>
-        </div>
-      </form>
-
-      <section aria-labelledby="inventory-heading">
-        <h2 id="inventory-heading">Current inventory</h2>
-        <p id="empty-message">No inventory records yet.</p>
-        <ul id="inventory-list" aria-live="polite"></ul>
-      </section>
-    </main>
-
-    <script src="app.js"></script>
-  </body>
+  <section aria-labelledby="employees-heading">
+    <h2 id="employees-heading">Employees</h2>
+    <p id="employees-empty-message">No employee records yet.</p>
+    <div class="table-wrapper" id="employees-table-wrapper" hidden>
+      <table>
+        <thead><tr><th scope="col">Name</th><th scope="col">Email</th><th scope="col">Actions</th></tr></thead>
+        <tbody id="employees-table-body"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+<script src="app.js"></script>
+</body>
 </html>
