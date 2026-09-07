@@ -37,6 +37,8 @@
       <input type="hidden" id="employee-id">
       <label for="employee-name">Name</label><input type="text" id="employee-name" name="employee-name" required>
       <label for="employee-email">Email</label><input type="email" id="employee-email" name="employee-email" required>
+      <label for="employee-department">Department (optional)</label>
+      <select id="employee-department" name="employee-department"><option value="">No department</option></select>
       <div class="form-actions"><button type="submit" id="employee-submit-button">Add employee</button><button type="button" id="employee-cancel-button" hidden>Cancel edit</button></div>
     </form>
   </section>
@@ -46,8 +48,28 @@
     <p id="employees-empty-message">No employee records yet.</p>
     <div class="table-wrapper" id="employees-table-wrapper" hidden>
       <table>
-        <thead><tr><th scope="col">Name</th><th scope="col">Email</th><th scope="col">Actions</th></tr></thead>
+        <thead><tr><th scope="col">Name</th><th scope="col">Email</th><th scope="col">Department</th><th scope="col">Actions</th></tr></thead>
         <tbody id="employees-table-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="department-form-heading">
+    <h2 id="department-form-heading">Add a department</h2>
+    <form id="department-form" novalidate>
+      <input type="hidden" id="department-id">
+      <label for="department-name">Name</label><input type="text" id="department-name" name="department-name" required>
+      <div class="form-actions"><button type="submit" id="department-submit-button">Add department</button><button type="button" id="department-cancel-button" hidden>Cancel edit</button></div>
+    </form>
+  </section>
+
+  <section aria-labelledby="departments-heading">
+    <h2 id="departments-heading">Departments</h2>
+    <p id="departments-empty-message">No department records yet.</p>
+    <div class="table-wrapper" id="departments-table-wrapper" hidden>
+      <table>
+        <thead><tr><th scope="col">Name</th><th scope="col">Employees</th><th scope="col">Actions</th></tr></thead>
+        <tbody id="departments-table-body"></tbody>
       </table>
     </div>
   </section>
