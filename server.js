@@ -3,12 +3,16 @@
 // Dependency-free application boundary. Data lives in this process, matching the
 // prototype's previous in-memory behaviour, but is now always tenant scoped.
 const { createServer } = require("node:http");
-const { randomBytes, scryptSync, timingSafeEqual } = require("node:crypto");
+const { randomBytes, scrypt, timingSafeEqual } = require("node:crypto");
 const { readFileSync } = require("node:fs");
 const { join } = require("node:path");
+const { promisify } = require("node:util");
 
 const MAX_REQUEST_BODY_SIZE = 64 * 1024;
 const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
+const scryptAsync = promisify(scrypt);
+const DUMMY_PASSWORD = "not-a-valid-user-password";
+const DUMMY_PASSWORD_SALT = "00000000000000000000000000000000";
 
 const publicFiles = new Map([
   ["/login", ["login.html", "text/html; charset=utf-8"]],
@@ -20,29 +24,46 @@ const protectedFiles = new Map([
   ["/app.js", ["app.js", "application/javascript; charset=utf-8"]],
 ]);
 
-function hashPassword(password, salt = randomBytes(16).toString("hex")) {
-  return `${salt}:${scryptSync(password, salt, 64).toString("hex")}`;
+async function hashPassword(password, salt = randomBytes(16).toString("hex")) {
+  return `${salt}:${(await scryptAsync(password, salt, 64)).toString("hex")}`;
 }
 
-function passwordMatches(password, stored) {
+async function passwordMatches(password, stored) {
   const [salt, expected] = String(stored).split(":");
   if (!salt || !expected) return false;
-  const actual = scryptSync(password, salt, 64).toString("hex");
+  const actual = (await scryptAsync(password, salt, 64)).toString("hex");
   return actual.length === expected.length && timingSafeEqual(Buffer.from(actual), Buffer.from(expected));
 }
 
-function createStore(seed = {}) {
+function canonicalEmail(email) {
+  return typeof email === "string" ? email.trim().toLowerCase() : "";
+}
+
+async function createStore(seed = {}) {
   const users = new Map();
+  const usersByEmail = new Map();
+  const pendingEmails = new Set();
   const tenants = new Map();
   let nextUserId = 1;
-  const addUser = ({ email, password, isAdmin = false, tenantId = "default" }) => {
-    const user = { id: nextUserId++, email: email.toLowerCase(), passwordHash: hashPassword(password), isAdmin, tenantId };
+  const addUser = async ({ email, password, isAdmin = false, tenantId = "default" }) => {
+    const canonical = canonicalEmail(email);
+    if (!canonical) throw new Error("User email must be non-empty.");
+    if (usersByEmail.has(canonical) || pendingEmails.has(canonical)) throw new Error("User email must be globally unique.");
+    pendingEmails.add(canonical);
+    let passwordHash;
+    try {
+      passwordHash = await hashPassword(password);
+    } finally {
+      pendingEmails.delete(canonical);
+    }
+    const user = { id: nextUserId++, email: canonical, passwordHash, isAdmin, tenantId };
     users.set(user.id, user);
+    usersByEmail.set(canonical, user);
     if (!tenants.has(tenantId)) tenants.set(tenantId, { inventory: [], employees: [], nextInventoryId: 1, nextEmployeeId: 1 });
     return user;
   };
-  for (const user of seed.users || []) addUser(user);
-  return { users, tenants, addUser };
+  for (const user of seed.users || []) await addUser(user);
+  return { users, usersByEmail, tenants, addUser, hasEmail: (email) => usersByEmail.has(canonicalEmail(email)) || pendingEmails.has(canonicalEmail(email)), dummyPasswordHash: await hashPassword(DUMMY_PASSWORD, DUMMY_PASSWORD_SALT) };
 }
 
 function json(status, body, headers = {}) {
@@ -55,7 +76,9 @@ function cookieValue(header, name) {
 function userView(user) { return { id: user.id, email: user.email, isAdmin: user.isAdmin }; }
 function validText(value) { return typeof value === "string" && value.trim(); }
 
-function createApp({ store = createStore(), sessionTtlMs = SESSION_TTL_MS, now = Date.now } = {}) {
+async function createApp(options = {}) {
+  const { sessionTtlMs = SESSION_TTL_MS, now = Date.now } = options;
+  const store = options.store || await createStore();
   if (!Number.isFinite(sessionTtlMs) || sessionTtlMs <= 0) throw new Error("sessionTtlMs must be a positive, finite number.");
   const sessions = new Map();
   const currentUser = (headers) => {
@@ -87,6 +110,7 @@ function createApp({ store = createStore(), sessionTtlMs = SESSION_TTL_MS, now =
     } catch {
       return error(400, "Malformed request target.");
     }
+    if (Buffer.byteLength(String(body), "utf8") > MAX_REQUEST_BODY_SIZE) return error(413, "Request body too large.");
     if (method === "GET" && publicFiles.has(pathname)) {
       const [file, type] = publicFiles.get(pathname);
       return { status: 200, headers: { "content-type": type }, body: readFileSync(join(__dirname, file), "utf8") };
@@ -99,8 +123,10 @@ function createApp({ store = createStore(), sessionTtlMs = SESSION_TTL_MS, now =
     if (pathname === "/api/session" && method === "POST") {
       const values = parseBody(body);
       if (!values || !validText(values.email) || !validText(values.password)) return error(400, "Email and password are required.");
-      const user = [...store.users.values()].find((entry) => entry.email === values.email.trim().toLowerCase());
-      if (!user || !passwordMatches(values.password, user.passwordHash)) return error(401, "Invalid email or password.");
+      const user = store.usersByEmail.get(canonicalEmail(values.email));
+      if (!await passwordMatches(values.password, user?.passwordHash || store.dummyPasswordHash)) return error(401, "Invalid email or password.");
+      if (!user) return error(401, "Invalid email or password.");
+      for (const [token, session] of sessions) if (session.expiresAt <= now()) sessions.delete(token);
       const token = randomBytes(32).toString("base64url");
       sessions.set(token, { userId: user.id, expiresAt: now() + sessionTtlMs });
       return json(200, { user: userView(user) }, { "set-cookie": `session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/` });
@@ -160,8 +186,13 @@ function createApp({ store = createStore(), sessionTtlMs = SESSION_TTL_MS, now =
     if (pathname === "/api/admin/users" && method === "POST") {
       if (!requireAdmin(headers)) return error(403, "Administrator access required.");
       if (!data || !validText(data.email) || !validText(data.password) || data.password.length < 12 || typeof data.isAdmin !== "boolean") return error(400, "Use an email, a password of at least 12 characters, and an administrator setting.");
-      if ([...store.users.values()].some((entry) => entry.tenantId === user.tenantId && entry.email === data.email.trim().toLowerCase())) return error(409, "That email is already in use.");
-      return json(201, { user: userView(store.addUser({ email: data.email.trim(), password: data.password, isAdmin: data.isAdmin, tenantId: user.tenantId })) });
+      if (store.hasEmail(data.email)) return error(409, "That email is already in use.");
+      try {
+        return json(201, { user: userView(await store.addUser({ email: data.email, password: data.password, isAdmin: data.isAdmin, tenantId: user.tenantId })) });
+      } catch (reason) {
+        if (reason?.message === "User email must be globally unique.") return error(409, "That email is already in use.");
+        throw reason;
+      }
     }
     const managedUser = pathname.match(/^\/api\/admin\/users\/(\d+)$/);
     if (managedUser && method === "PATCH") {
@@ -177,12 +208,12 @@ function createApp({ store = createStore(), sessionTtlMs = SESSION_TTL_MS, now =
       const target = store.users.get(Number(managedUser[1])); if (!target || target.tenantId !== admin.tenantId) return error(404, "Not found.");
       if (target.id === admin.id) return error(400, "Administrators cannot delete themselves.");
       if (target.isAdmin && [...store.users.values()].filter((entry) => entry.tenantId === admin.tenantId && entry.isAdmin).length === 1) return error(400, "Keep at least one administrator.");
-      store.users.delete(target.id); for (const [token, session] of sessions) if (session.userId === target.id) sessions.delete(token);
+      store.users.delete(target.id); store.usersByEmail.delete(target.email); for (const [token, session] of sessions) if (session.userId === target.id) sessions.delete(token);
       return { status: 204, headers: {}, body: "" };
     }
     return error(404, "Not found.");
   }
-  return { handle, store };
+  return { handle, store, sessions };
 }
 
 function createBootstrapSeed(env = process.env) {
@@ -225,10 +256,10 @@ function createAppServer(app, { maxRequestBodySize = MAX_REQUEST_BODY_SIZE } = {
   });
 }
 
-function start() {
+async function start() {
   const seed = createBootstrapSeed();
-  const app = createApp({ store: createStore(seed) });
+  const app = await createApp({ store: await createStore(seed) });
   return createAppServer(app).listen(process.env.PORT || 3000);
 }
-if (require.main === module) start();
-module.exports = { createApp, createAppServer, createBootstrapSeed, createStore, hashPassword };
+if (require.main === module) start().catch((reason) => { process.nextTick(() => { throw reason; }); });
+module.exports = { createApp, createAppServer, createBootstrapSeed, createStore, hashPassword, passwordMatches, canonicalEmail };
