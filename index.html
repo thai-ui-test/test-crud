@@ -8,7 +8,7 @@
 </head>
 <body>
 <main>
-  <h1>Inventory Manager</h1>
+  <div class="page-heading"><h1>Inventory Manager</h1><button type="button" id="sign-out-button">Sign out</button></div>
   <p id="app-status" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true"></p>
 
   <section aria-labelledby="inventory-form-heading">
@@ -50,6 +50,19 @@
         <tbody id="employees-table-body"></tbody>
       </table>
     </div>
+  </section>
+
+  <section id="admin-panel" aria-labelledby="admin-heading" hidden>
+    <h2 id="admin-heading">User administration</h2>
+    <p id="admin-status" role="alert" hidden></p>
+    <form id="user-form">
+      <label for="user-email">Email</label><input type="email" id="user-email" required autocomplete="off">
+      <label for="user-password">Temporary password</label><input type="password" id="user-password" required minlength="12" autocomplete="new-password">
+      <label class="checkbox-label" for="user-admin"><input type="checkbox" id="user-admin"> Administrator access</label>
+      <div class="form-actions"><button type="submit">Create user</button></div>
+    </form>
+    <p id="users-empty-message">No users yet.</p>
+    <div class="table-wrapper" id="users-table-wrapper" hidden><table><thead><tr><th scope="col">Email</th><th scope="col">Role</th><th scope="col">Actions</th></tr></thead><tbody id="users-table-body"></tbody></table></div>
   </section>
 </main>
 <script src="app.js"></script>
