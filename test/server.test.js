@@ -119,6 +119,24 @@ test("unknown logins return the same invalid-credentials response", async () => 
   assert.deepEqual(JSON.parse(unknown.body), JSON.parse(wrongPassword.body));
 });
 
+test("createApp resolves a promised store", async () => {
+  const app = await createApp({ store: createStore({ users: [
+    { email: "admin@test", password: "correct horse battery staple", isAdmin: true },
+  ] }) });
+  assert.equal((await app.handle({ method: "POST", url: "/api/session", body: JSON.stringify({ email: "admin@test", password: "correct horse battery staple" }) })).status, 200);
+});
+
+test("a user deleted during password verification cannot receive a session", async () => {
+  const app = await fixture();
+  const admin = await login(app, "admin@acme.test");
+  const loginInFlight = app.handle({ method: "POST", url: "/api/session", body: JSON.stringify({ email: "member@acme.test", password: "correct horse battery staple" }) });
+  assert.equal((await call(app, "DELETE", "/api/admin/users/2", admin)).status, 204);
+  const response = await loginInFlight;
+  assert.equal(response.status, 401);
+  assert.deepEqual(JSON.parse(response.body), { error: "Invalid email or password." });
+  assert.equal(app.sessions.size, 1, "the in-flight login did not create a session");
+});
+
 test("direct application requests over 64 KiB are rejected", async () => {
   const response = await (await fixture()).handle({ method: "POST", url: "/api/session", body: "x".repeat(64 * 1024 + 1) });
   assert.equal(response.status, 413);

@@ -78,7 +78,7 @@ function validText(value) { return typeof value === "string" && value.trim(); }
 
 async function createApp(options = {}) {
   const { sessionTtlMs = SESSION_TTL_MS, now = Date.now } = options;
-  const store = options.store || await createStore();
+  const store = await (options.store || createStore());
   if (!Number.isFinite(sessionTtlMs) || sessionTtlMs <= 0) throw new Error("sessionTtlMs must be a positive, finite number.");
   const sessions = new Map();
   const currentUser = (headers) => {
@@ -125,7 +125,7 @@ async function createApp(options = {}) {
       if (!values || !validText(values.email) || !validText(values.password)) return error(400, "Email and password are required.");
       const user = store.usersByEmail.get(canonicalEmail(values.email));
       if (!await passwordMatches(values.password, user?.passwordHash || store.dummyPasswordHash)) return error(401, "Invalid email or password.");
-      if (!user) return error(401, "Invalid email or password.");
+      if (!user || store.users.get(user.id) !== user || store.usersByEmail.get(canonicalEmail(values.email)) !== user) return error(401, "Invalid email or password.");
       for (const [token, session] of sessions) if (session.expiresAt <= now()) sessions.delete(token);
       const token = randomBytes(32).toString("base64url");
       sessions.set(token, { userId: user.id, expiresAt: now() + sessionTtlMs });
