@@ -2,16 +2,20 @@
 * { box-sizing: border-box; }
 body { margin: 0; min-height: 100vh; padding: 2rem 1rem; color: #111; background: #eaff00; }
 main { width: min(52rem, 100%); margin: 0 auto; }
+.page-heading { display: flex; justify-content: space-between; gap: 1rem; align-items: center; }
 form, .inventory-item, .table-wrapper { padding: 1.25rem; border: 2px solid #111; border-radius: .5rem; background: #fff; box-shadow: 4px 4px 0 #111; }
 form { display: grid; gap: .5rem; }
 input, textarea, select, button { font: inherit; }
 input, textarea, select { width: 100%; padding: .65rem; border: 2px solid #111; border-radius: .25rem; }
+.checkbox-label { display: flex; align-items: center; gap: .5rem; font-weight: 700; }
+.checkbox-label input { width: auto; }
 textarea { resize: vertical; }
 .form-actions, .item-actions, .assignment-control { display: flex; flex-wrap: wrap; gap: .5rem; align-items: end; margin-top: .5rem; }
 .assignment-control label { flex-basis: 100%; font-weight: 700; }
 .assignment-control select { flex: 1 1 14rem; }
 button { padding: .6rem 1rem; border: 2px solid #111; border-radius: .25rem; color: #fff; background: #111; cursor: pointer; }
 button:hover, button:focus-visible { color: #111; background: #eaff00; }
+button:disabled { cursor: not-allowed; opacity: .55; }
 h2 { margin-top: 2rem; }
 #inventory-list { display: grid; gap: 1rem; padding: 0; list-style: none; }
 .inventory-item h3, .inventory-item p { margin-top: 0; }
