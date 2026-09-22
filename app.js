@@ -33,6 +33,7 @@ const SESSION_STORAGE_KEY = "admin-portal:session";
 const SEED_USERNAME = "admin";
 const SEED_PASSWORD = "admin123";
 const UNSUPPORTED_BROWSER_MESSAGE = "This browser does not support the Web Crypto API required for secure password hashing. Please use an updated browser to continue.";
+const SHA256_HASH_PATTERN = /^sha256:[0-9a-f]{64}$/;
 
 async function hashPassword(password) {
   if (!window.crypto || !window.crypto.subtle) {
@@ -52,7 +53,7 @@ function isValidUserRecord(record) {
     typeof record.username === "string" &&
     record.username.trim().length > 0 &&
     typeof record.passwordHash === "string" &&
-    record.passwordHash.startsWith("sha256:") &&
+    SHA256_HASH_PATTERN.test(record.passwordHash) &&
     typeof record.isAdmin === "boolean" &&
     typeof record.mustChangePassword === "boolean"
   );
@@ -71,7 +72,9 @@ function isValidUserStore(parsed) {
     return false;
   }
   const ids = new Set(parsed.users.map((user) => user.id));
-  return ids.size === parsed.users.length;
+  if (ids.size !== parsed.users.length) return false;
+  const usernames = new Set(parsed.users.map((user) => user.username.trim().toLowerCase()));
+  return usernames.size === parsed.users.length;
 }
 
 // Distinguishes "no store yet" (safe to seed) from "store present but
@@ -105,6 +108,8 @@ function saveUsers(newUsers, expectedRevision) {
   }
   const ids = new Set(newUsers.map((user) => user.id));
   if (ids.size !== newUsers.length) return { outcome: "invalid" };
+  const usernames = new Set(newUsers.map((user) => user.username.trim().toLowerCase()));
+  if (usernames.size !== newUsers.length) return { outcome: "invalid" };
 
   let raw;
   try {
@@ -315,6 +320,10 @@ function enterApp() {
 
 function switchPanel(panel, { focus = true } = {}) {
   if (!currentUser) return;
+  if (!isSessionValid() || !refreshUsersFromStorage() || !syncCurrentUserFromUsers()) {
+    invalidateSessionAndSignOut("Your session is no longer valid. Please sign in again.");
+    return;
+  }
   if (panel === "users" && !currentUser?.isAdmin) panel = "inventory";
   activePanel = panel;
   navButtons.forEach((button) => {
@@ -509,7 +518,7 @@ function adminCount() {
 
 function renderUsers() {
   usersTableBody.replaceChildren();
-  if (!currentUser?.isAdmin) {
+  if (!refreshAndValidateAdmin()) {
     usersEmptyMessage.hidden = true;
     usersTableWrapper.hidden = true;
     return;
