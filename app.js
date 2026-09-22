@@ -1027,7 +1027,12 @@ async function init() {
     // written a stale or forged session while this tab was hashing the seed
     // password or resolving a concurrent seed conflict, and that session
     // could now resolve to a real (newly seeded/adopted) user.
-    saveSession(null);
+    if (!saveSession(null)) {
+      showFieldError(loginError, "Account data in browser storage is invalid or unavailable. Sign-in is disabled until this is resolved.");
+      disableLoginForm();
+      showView("login");
+      return;
+    }
   } else {
     // status === "invalid" or "error": storage exists but is malformed,
     // empty, or unreadable. Fail closed rather than silently reseeding a
