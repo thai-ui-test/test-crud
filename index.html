@@ -3,55 +3,136 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inventory Manager</title>
+  <title>Admin Portal</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<main>
-  <h1>Inventory Manager</h1>
-  <p id="app-status" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true"></p>
+<p id="live-region" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true"></p>
 
-  <section aria-labelledby="inventory-form-heading">
-    <h2 id="inventory-form-heading">Add an inventory item</h2>
-    <form id="inventory-form" novalidate>
-      <input type="hidden" id="record-id">
-      <label for="name">Name</label><input type="text" id="name" name="name" required>
-      <label for="description">Description</label><textarea id="description" name="description" rows="3" required></textarea>
-      <label for="status">Status</label>
-      <select id="status" name="status" required>
-        <option value="In stock">In stock</option><option value="Low stock">Low stock</option><option value="Out of stock">Out of stock</option>
-      </select>
-      <div class="form-actions"><button type="submit" id="submit-button">Add item</button><button type="button" id="cancel-button" hidden>Cancel edit</button></div>
+<main id="login-view" class="auth-view">
+  <div class="auth-card">
+    <h1>Admin Portal</h1>
+    <p class="auth-subtitle">Sign in to manage inventory and employees.</p>
+    <form id="login-form" novalidate>
+      <label for="login-username">Username</label>
+      <input type="text" id="login-username" name="username" autocomplete="username" required>
+      <label for="login-password">Password</label>
+      <input type="password" id="login-password" name="password" autocomplete="current-password" required>
+      <p id="login-error" class="form-error" role="alert" hidden></p>
+      <div class="form-actions"><button type="submit" id="login-submit" class="btn btn-primary">Sign in</button></div>
     </form>
-  </section>
-
-  <section aria-labelledby="inventory-heading">
-    <h2 id="inventory-heading">Current inventory</h2>
-    <p id="empty-message">No inventory records yet.</p>
-    <ul id="inventory-list"></ul>
-  </section>
-
-  <section aria-labelledby="employee-form-heading">
-    <h2 id="employee-form-heading">Add an employee</h2>
-    <form id="employee-form" novalidate>
-      <input type="hidden" id="employee-id">
-      <label for="employee-name">Name</label><input type="text" id="employee-name" name="employee-name" required>
-      <label for="employee-email">Email</label><input type="email" id="employee-email" name="employee-email" required>
-      <div class="form-actions"><button type="submit" id="employee-submit-button">Add employee</button><button type="button" id="employee-cancel-button" hidden>Cancel edit</button></div>
-    </form>
-  </section>
-
-  <section aria-labelledby="employees-heading">
-    <h2 id="employees-heading">Employees</h2>
-    <p id="employees-empty-message">No employee records yet.</p>
-    <div class="table-wrapper" id="employees-table-wrapper" hidden>
-      <table>
-        <thead><tr><th scope="col">Name</th><th scope="col">Email</th><th scope="col">Actions</th></tr></thead>
-        <tbody id="employees-table-body"></tbody>
-      </table>
-    </div>
-  </section>
+    <p class="seed-hint">Seeded administrator — username <code>admin</code>, temporary password <code>admin123</code>. You'll be asked to set a new password on first sign-in.</p>
+    <p class="security-note"><strong>Browser-only demo:</strong> accounts and sessions live in this browser's localStorage. This gates the UI only — it is not server-side security and must not be relied on to protect real data.</p>
+  </div>
 </main>
+
+<main id="password-change-view" class="auth-view" hidden>
+  <div class="auth-card">
+    <h1 id="password-change-heading" tabindex="-1">Set a new password</h1>
+    <p class="auth-subtitle">This account has a temporary password. Choose a new one to continue.</p>
+    <form id="password-change-form" novalidate>
+      <label for="new-password">New password</label>
+      <input type="password" id="new-password" name="new-password" autocomplete="new-password" required minlength="8">
+      <label for="confirm-password">Confirm new password</label>
+      <input type="password" id="confirm-password" name="confirm-password" autocomplete="new-password" required minlength="8">
+      <p id="password-change-error" class="form-error" role="alert" hidden></p>
+      <div class="form-actions"><button type="submit" id="password-change-submit" class="btn btn-primary">Set password and continue</button></div>
+    </form>
+  </div>
+</main>
+
+<div id="app-view" hidden>
+  <a class="skip-link" href="#app-main">Skip to main content</a>
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">&#9670;</span>
+      <span class="brand-name">Admin Portal</span>
+    </div>
+    <div class="session-info">
+      <span id="current-user-label"></span>
+      <button type="button" id="sign-out-button" class="btn btn-ghost">Sign out</button>
+    </div>
+  </header>
+
+  <nav class="app-nav" aria-label="Primary">
+    <button type="button" class="nav-link" id="nav-inventory" data-panel="inventory" aria-current="page">Inventory</button>
+    <button type="button" class="nav-link" id="nav-employees" data-panel="employees">Employees</button>
+    <button type="button" class="nav-link" id="nav-users" data-panel="users" hidden>Users</button>
+  </nav>
+
+  <main id="app-main">
+    <section id="panel-inventory" class="panel" aria-labelledby="inventory-heading">
+      <h2 id="inventory-heading" tabindex="-1">Current inventory</h2>
+
+      <div class="card">
+        <h3 id="inventory-form-heading">Add an inventory item</h3>
+        <form id="inventory-form" novalidate>
+          <input type="hidden" id="record-id">
+          <label for="name">Name</label><input type="text" id="name" name="name" required>
+          <label for="description">Description</label><textarea id="description" name="description" rows="3" required></textarea>
+          <label for="status">Status</label>
+          <select id="status" name="status" required>
+            <option value="In stock">In stock</option><option value="Low stock">Low stock</option><option value="Out of stock">Out of stock</option>
+          </select>
+          <div class="form-actions"><button type="submit" id="submit-button" class="btn btn-primary">Add item</button><button type="button" id="cancel-button" class="btn btn-ghost" hidden>Cancel edit</button></div>
+        </form>
+      </div>
+
+      <p id="empty-message">No inventory records yet.</p>
+      <ul id="inventory-list"></ul>
+    </section>
+
+    <section id="panel-employees" class="panel" aria-labelledby="employees-heading" hidden>
+      <h2 id="employees-heading" tabindex="-1">Employees</h2>
+
+      <div class="card">
+        <h3 id="employee-form-heading">Add an employee</h3>
+        <form id="employee-form" novalidate>
+          <input type="hidden" id="employee-id">
+          <label for="employee-name">Name</label><input type="text" id="employee-name" name="employee-name" required>
+          <label for="employee-email">Email</label><input type="email" id="employee-email" name="employee-email" required>
+          <div class="form-actions"><button type="submit" id="employee-submit-button" class="btn btn-primary">Add employee</button><button type="button" id="employee-cancel-button" class="btn btn-ghost" hidden>Cancel edit</button></div>
+        </form>
+      </div>
+
+      <p id="employees-empty-message">No employee records yet.</p>
+      <div class="table-wrapper" id="employees-table-wrapper" hidden>
+        <table>
+          <thead><tr><th scope="col">Name</th><th scope="col">Email</th><th scope="col">Actions</th></tr></thead>
+          <tbody id="employees-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="panel-users" class="panel" aria-labelledby="users-heading" hidden>
+      <h2 id="users-heading" tabindex="-1">User management</h2>
+      <p class="panel-note">Administrators can create accounts, grant or revoke administrator access, and remove accounts. Changes are stored only in this browser.</p>
+
+      <div class="card">
+        <h3 id="user-form-heading">Add a user</h3>
+        <form id="user-create-form" novalidate>
+          <label for="new-username">Username</label>
+          <input type="text" id="new-username" name="new-username" autocomplete="off" required>
+          <label for="new-user-password">Password</label>
+          <input type="password" id="new-user-password" name="new-user-password" autocomplete="new-password" required minlength="8">
+          <label for="new-user-confirm-password">Confirm password</label>
+          <input type="password" id="new-user-confirm-password" name="new-user-confirm-password" autocomplete="new-password" required minlength="8">
+          <label class="checkbox-label" for="new-user-is-admin"><input type="checkbox" id="new-user-is-admin" name="new-user-is-admin"> Grant administrator access</label>
+          <p id="user-create-error" class="form-error" role="alert" hidden></p>
+          <div class="form-actions"><button type="submit" id="user-create-submit" class="btn btn-primary">Add user</button></div>
+        </form>
+      </div>
+
+      <p id="users-empty-message" hidden>No user accounts yet.</p>
+      <div class="table-wrapper" id="users-table-wrapper">
+        <table>
+          <thead><tr><th scope="col">Username</th><th scope="col">Role</th><th scope="col">Actions</th></tr></thead>
+          <tbody id="users-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
 <script src="app.js"></script>
 </body>
 </html>
