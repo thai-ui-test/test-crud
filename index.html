@@ -51,7 +51,29 @@
       </table>
     </div>
   </section>
+
+  <section aria-labelledby="supplier-form-heading">
+    <h2 id="supplier-form-heading">Add a supplier</h2>
+    <form id="supplier-form" novalidate>
+      <input type="hidden" id="supplier-id">
+      <label for="supplier-name">Name</label><input type="text" id="supplier-name" name="supplier-name" required>
+      <label for="supplier-email">Contact email</label><input type="email" id="supplier-email" name="supplier-email" required>
+      <div class="form-actions"><button type="submit" id="supplier-submit-button">Add supplier</button><button type="button" id="supplier-cancel-button" hidden>Cancel edit</button></div>
+    </form>
+  </section>
+
+  <section aria-labelledby="suppliers-heading">
+    <h2 id="suppliers-heading">Suppliers</h2>
+    <p id="suppliers-empty-message">No supplier records yet.</p>
+    <div class="table-wrapper" id="suppliers-table-wrapper" hidden>
+      <table>
+        <thead><tr><th scope="col">Name</th><th scope="col">Contact email</th><th scope="col">Actions</th></tr></thead>
+        <tbody id="suppliers-table-body"></tbody>
+      </table>
+    </div>
+  </section>
 </main>
 <script src="app.js"></script>
+<script src="suppliers.js"></script>
 </body>
 </html>

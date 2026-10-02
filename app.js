@@ -25,6 +25,8 @@ let inventory = [];
 let employees = [];
 let nextInventoryId = 1;
 let nextEmployeeId = 1;
+let renderSupplierStatus = null;
+let renderSupplierAssignmentControl = null;
 
 function announce(message) {
   appStatus.textContent = "";
@@ -100,6 +102,7 @@ function renderInventory() {
     const row = document.createElement("li");
     row.className = "inventory-item";
     row.append(textElement("h3", item.name), textElement("p", item.description), textElement("p", `Status: ${item.status}`), textElement("p", `Assigned to: ${employee ? employee.name : "Unassigned"}`));
+    if (renderSupplierStatus) renderSupplierStatus(row, item);
 
     const assignment = document.createElement("div");
     assignment.className = "assignment-control";
@@ -129,7 +132,9 @@ function renderInventory() {
     remove.setAttribute("aria-label", `Delete ${item.name}`);
     remove.addEventListener("click", () => deleteItem(item.id));
     actions.append(edit, remove);
-    row.append(assignment, actions);
+    row.append(assignment);
+    if (renderSupplierAssignmentControl) renderSupplierAssignmentControl(row, item);
+    row.append(actions);
     inventoryList.append(row);
   });
 }
@@ -211,7 +216,7 @@ inventoryForm.addEventListener("submit", (event) => {
   const values = { name: nameInput.value.trim(), description: descriptionInput.value.trim(), status: statusInput.value };
   const item = inventory.find((record) => record.id === Number(recordIdInput.value));
   if (item) Object.assign(item, values);
-  else inventory.push({ id: nextInventoryId++, employeeId: null, ...values });
+  else inventory.push({ id: nextInventoryId++, employeeId: null, supplierId: null, ...values });
   resetInventoryForm();
   renderInventory();
   nameInput.focus();
@@ -249,6 +254,3 @@ employeeCancelButton.addEventListener("click", () => {
 [nameInput, descriptionInput].forEach((input) => input.addEventListener("input", () => { input.setCustomValidity(""); inventoryForm.dataset.dirty = "true"; }));
 statusInput.addEventListener("change", () => { inventoryForm.dataset.dirty = "true"; });
 [employeeNameInput, employeeEmailInput].forEach((input) => input.addEventListener("input", () => { input.setCustomValidity(""); employeeForm.dataset.dirty = "true"; }));
-
-renderInventory();
-renderEmployees();
