@@ -51,9 +51,10 @@ function validateQuantity(existingItem) {
     quantityInput.setCustomValidity(canStayUnset ? "" : message);
     return { valid: quantityInput.checkValidity(), provided: false };
   }
-  const nativelyValid = quantityInput.checkValidity();
-  quantityInput.setCustomValidity(nativelyValid ? "" : message);
-  return { valid: nativelyValid, provided: true };
+  const parsedValue = Number(quantityInput.value);
+  const isSafeNonNegativeInteger = Number.isSafeInteger(parsedValue) && parsedValue >= 0;
+  quantityInput.setCustomValidity(isSafeNonNegativeInteger ? "" : message);
+  return { valid: isSafeNonNegativeInteger, provided: true };
 }
 
 function resetInventoryForm() {
