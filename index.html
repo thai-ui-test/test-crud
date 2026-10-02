@@ -17,6 +17,7 @@
       <input type="hidden" id="record-id">
       <label for="name">Name</label><input type="text" id="name" name="name" required>
       <label for="description">Description</label><textarea id="description" name="description" rows="3" required></textarea>
+      <label for="category">Category</label><input type="text" id="category" name="category" required>
       <label for="status">Status</label>
       <select id="status" name="status" required>
         <option value="In stock">In stock</option><option value="Low stock">Low stock</option><option value="Out of stock">Out of stock</option>
@@ -27,6 +28,12 @@
 
   <section aria-labelledby="inventory-heading">
     <h2 id="inventory-heading">Current inventory</h2>
+    <div class="list-filter">
+      <label for="category-filter">Filter by category</label>
+      <select id="category-filter">
+        <option value="">All categories</option>
+      </select>
+    </div>
     <p id="empty-message">No inventory records yet.</p>
     <ul id="inventory-list"></ul>
   </section>

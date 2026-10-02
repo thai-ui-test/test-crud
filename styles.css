@@ -10,6 +10,9 @@ textarea { resize: vertical; }
 .form-actions, .item-actions, .assignment-control { display: flex; flex-wrap: wrap; gap: .5rem; align-items: end; margin-top: .5rem; }
 .assignment-control label { flex-basis: 100%; font-weight: 700; }
 .assignment-control select { flex: 1 1 14rem; }
+.list-filter { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-bottom: 1rem; }
+.list-filter label { font-weight: 700; }
+.list-filter select { flex: 1 1 14rem; }
 button { padding: .6rem 1rem; border: 2px solid #111; border-radius: .25rem; color: #fff; background: #111; cursor: pointer; }
 button:hover, button:focus-visible { color: #111; background: #eaff00; }
 h2 { margin-top: 2rem; }

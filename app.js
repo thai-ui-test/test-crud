@@ -4,10 +4,12 @@ const inventoryFormHeading = $("#inventory-form-heading");
 const recordIdInput = $("#record-id");
 const nameInput = $("#name");
 const descriptionInput = $("#description");
+const categoryInput = $("#category");
 const statusInput = $("#status");
 const submitButton = $("#submit-button");
 const cancelButton = $("#cancel-button");
 const inventoryList = $("#inventory-list");
+const categoryFilter = $("#category-filter");
 const emptyMessage = $("#empty-message");
 const employeeForm = $("#employee-form");
 const employeeFormHeading = $("#employee-form-heading");
@@ -50,6 +52,7 @@ function resetInventoryForm() {
   cancelButton.hidden = true;
   nameInput.setCustomValidity("");
   descriptionInput.setCustomValidity("");
+  categoryInput.setCustomValidity("");
   inventoryForm.dataset.dirty = "false";
 }
 
@@ -59,12 +62,14 @@ function startEditingItem(item) {
   recordIdInput.value = item.id;
   nameInput.value = item.name;
   descriptionInput.value = item.description;
+  categoryInput.value = item.category;
   statusInput.value = item.status;
   inventoryFormHeading.textContent = "Edit inventory item";
   submitButton.textContent = "Save changes";
   cancelButton.hidden = false;
   nameInput.setCustomValidity("");
   descriptionInput.setCustomValidity("");
+  categoryInput.setCustomValidity("");
   nameInput.focus();
   inventoryForm.dataset.dirty = "false";
 }
@@ -92,14 +97,25 @@ function setAssignment(itemId, employeeId) {
   announce(employee ? `${item.name} assigned to ${employee.name}.` : `${item.name} returned to unassigned.`);
 }
 
+function populateCategoryFilter() {
+  const categories = [...new Set(inventory.map((item) => item.category))].sort((a, b) => a.localeCompare(b));
+  const selected = categoryFilter.value;
+  categoryFilter.replaceChildren(new Option("All categories", ""));
+  categories.forEach((category) => categoryFilter.append(new Option(category, category)));
+  categoryFilter.value = categories.includes(selected) ? selected : "";
+}
+
 function renderInventory() {
+  populateCategoryFilter();
+  const filtered = categoryFilter.value ? inventory.filter((item) => item.category === categoryFilter.value) : inventory;
   inventoryList.replaceChildren();
-  emptyMessage.hidden = inventory.length > 0;
-  inventory.forEach((item) => {
+  emptyMessage.hidden = filtered.length > 0;
+  emptyMessage.textContent = inventory.length === 0 ? "No inventory records yet." : "No inventory items match the selected category.";
+  filtered.forEach((item) => {
     const employee = employees.find((record) => record.id === item.employeeId);
     const row = document.createElement("li");
     row.className = "inventory-item";
-    row.append(textElement("h3", item.name), textElement("p", item.description), textElement("p", `Status: ${item.status}`), textElement("p", `Assigned to: ${employee ? employee.name : "Unassigned"}`));
+    row.append(textElement("h3", item.name), textElement("p", `Category: ${item.category}`), textElement("p", item.description), textElement("p", `Status: ${item.status}`), textElement("p", `Assigned to: ${employee ? employee.name : "Unassigned"}`));
 
     const assignment = document.createElement("div");
     assignment.className = "assignment-control";
@@ -207,8 +223,9 @@ inventoryForm.addEventListener("submit", (event) => {
   event.preventDefault();
   const validName = requireTrimmed(nameInput, "Enter an item name that is not only spaces.");
   const validDescription = requireTrimmed(descriptionInput, "Enter a description that is not only spaces.");
-  if (!validName || !validDescription || !inventoryForm.checkValidity()) return inventoryForm.reportValidity();
-  const values = { name: nameInput.value.trim(), description: descriptionInput.value.trim(), status: statusInput.value };
+  const validCategory = requireTrimmed(categoryInput, "Enter a category that is not only spaces.");
+  if (!validName || !validDescription || !validCategory || !inventoryForm.checkValidity()) return inventoryForm.reportValidity();
+  const values = { name: nameInput.value.trim(), description: descriptionInput.value.trim(), category: categoryInput.value.trim(), status: statusInput.value };
   const item = inventory.find((record) => record.id === Number(recordIdInput.value));
   if (item) Object.assign(item, values);
   else inventory.push({ id: nextInventoryId++, employeeId: null, ...values });
@@ -246,8 +263,9 @@ employeeCancelButton.addEventListener("click", () => {
   $(`[data-employee-edit="${id}"]`)?.focus();
   announce("Employee edit cancelled.");
 });
-[nameInput, descriptionInput].forEach((input) => input.addEventListener("input", () => { input.setCustomValidity(""); inventoryForm.dataset.dirty = "true"; }));
+[nameInput, descriptionInput, categoryInput].forEach((input) => input.addEventListener("input", () => { input.setCustomValidity(""); inventoryForm.dataset.dirty = "true"; }));
 statusInput.addEventListener("change", () => { inventoryForm.dataset.dirty = "true"; });
+categoryFilter.addEventListener("change", () => renderInventory());
 [employeeNameInput, employeeEmailInput].forEach((input) => input.addEventListener("input", () => { input.setCustomValidity(""); employeeForm.dataset.dirty = "true"; }));
 
 renderInventory();
