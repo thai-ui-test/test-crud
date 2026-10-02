@@ -5,6 +5,7 @@ const recordIdInput = $("#record-id");
 const nameInput = $("#name");
 const descriptionInput = $("#description");
 const statusInput = $("#status");
+const quantityInput = $("#quantity");
 const submitButton = $("#submit-button");
 const cancelButton = $("#cancel-button");
 const inventoryList = $("#inventory-list");
@@ -42,6 +43,19 @@ function requireTrimmed(input, message) {
   return input.checkValidity();
 }
 
+function validateQuantity(existingItem) {
+  const message = "Enter a non-negative whole number quantity.";
+  quantityInput.setCustomValidity("");
+  if (quantityInput.value.trim() === "") {
+    const canStayUnset = existingItem && existingItem.quantity === undefined;
+    quantityInput.setCustomValidity(canStayUnset ? "" : message);
+    return { valid: quantityInput.checkValidity(), provided: false };
+  }
+  const nativelyValid = quantityInput.checkValidity();
+  quantityInput.setCustomValidity(nativelyValid ? "" : message);
+  return { valid: nativelyValid, provided: true };
+}
+
 function resetInventoryForm() {
   inventoryForm.reset();
   recordIdInput.value = "";
@@ -50,6 +64,8 @@ function resetInventoryForm() {
   cancelButton.hidden = true;
   nameInput.setCustomValidity("");
   descriptionInput.setCustomValidity("");
+  quantityInput.setCustomValidity("");
+  quantityInput.required = true;
   inventoryForm.dataset.dirty = "false";
 }
 
@@ -60,11 +76,14 @@ function startEditingItem(item) {
   nameInput.value = item.name;
   descriptionInput.value = item.description;
   statusInput.value = item.status;
+  quantityInput.value = item.quantity === undefined ? "" : item.quantity;
   inventoryFormHeading.textContent = "Edit inventory item";
   submitButton.textContent = "Save changes";
   cancelButton.hidden = false;
   nameInput.setCustomValidity("");
   descriptionInput.setCustomValidity("");
+  quantityInput.setCustomValidity("");
+  quantityInput.required = item.quantity !== undefined;
   nameInput.focus();
   inventoryForm.dataset.dirty = "false";
 }
@@ -99,7 +118,19 @@ function renderInventory() {
     const employee = employees.find((record) => record.id === item.employeeId);
     const row = document.createElement("li");
     row.className = "inventory-item";
-    row.append(textElement("h3", item.name), textElement("p", item.description), textElement("p", `Status: ${item.status}`), textElement("p", `Assigned to: ${employee ? employee.name : "Unassigned"}`));
+    const header = document.createElement("div");
+    header.className = "inventory-item-header";
+    header.append(textElement("h3", item.name));
+    const hasQuantity = typeof item.quantity === "number";
+    if (hasQuantity && item.quantity < 5) {
+      const badge = textElement("span", "Low stock");
+      badge.className = "low-stock-badge";
+      header.append(badge);
+    }
+    const details = [textElement("p", item.description), textElement("p", `Status: ${item.status}`)];
+    if (hasQuantity) details.push(textElement("p", `Quantity: ${item.quantity}`));
+    details.push(textElement("p", `Assigned to: ${employee ? employee.name : "Unassigned"}`));
+    row.append(header, ...details);
 
     const assignment = document.createElement("div");
     assignment.className = "assignment-control";
@@ -207,9 +238,11 @@ inventoryForm.addEventListener("submit", (event) => {
   event.preventDefault();
   const validName = requireTrimmed(nameInput, "Enter an item name that is not only spaces.");
   const validDescription = requireTrimmed(descriptionInput, "Enter a description that is not only spaces.");
-  if (!validName || !validDescription || !inventoryForm.checkValidity()) return inventoryForm.reportValidity();
-  const values = { name: nameInput.value.trim(), description: descriptionInput.value.trim(), status: statusInput.value };
   const item = inventory.find((record) => record.id === Number(recordIdInput.value));
+  const quantityCheck = validateQuantity(item);
+  if (!validName || !validDescription || !quantityCheck.valid || !inventoryForm.checkValidity()) return inventoryForm.reportValidity();
+  const values = { name: nameInput.value.trim(), description: descriptionInput.value.trim(), status: statusInput.value };
+  if (quantityCheck.provided) values.quantity = Number(quantityInput.value);
   if (item) Object.assign(item, values);
   else inventory.push({ id: nextInventoryId++, employeeId: null, ...values });
   resetInventoryForm();
@@ -248,6 +281,7 @@ employeeCancelButton.addEventListener("click", () => {
 });
 [nameInput, descriptionInput].forEach((input) => input.addEventListener("input", () => { input.setCustomValidity(""); inventoryForm.dataset.dirty = "true"; }));
 statusInput.addEventListener("change", () => { inventoryForm.dataset.dirty = "true"; });
+quantityInput.addEventListener("input", () => { quantityInput.setCustomValidity(""); inventoryForm.dataset.dirty = "true"; });
 [employeeNameInput, employeeEmailInput].forEach((input) => input.addEventListener("input", () => { input.setCustomValidity(""); employeeForm.dataset.dirty = "true"; }));
 
 renderInventory();

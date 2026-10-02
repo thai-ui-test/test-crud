@@ -15,6 +15,9 @@ button:hover, button:focus-visible { color: #111; background: #eaff00; }
 h2 { margin-top: 2rem; }
 #inventory-list { display: grid; gap: 1rem; padding: 0; list-style: none; }
 .inventory-item h3, .inventory-item p { margin-top: 0; }
+.inventory-item-header { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.inventory-item-header h3 { margin-bottom: 0; }
+.low-stock-badge { padding: .2rem .5rem; border: 2px solid #111; border-radius: .25rem; background: #b00020; color: #fff; font-size: .8rem; font-weight: 700; }
 .table-wrapper { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; }
 th, td { padding: .75rem; border-bottom: 2px solid #111; text-align: left; }
